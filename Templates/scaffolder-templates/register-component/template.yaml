@@ -1,0 +1,83 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: Register Component Into The Catalog
+  title: Register Component
+  description: Registers a Component into the catalog
+  tags:
+    - recommended
+    - register
+    - component
+spec:
+  owner: web@example.com
+  type: service
+
+
+  parameters:
+    - title: Please Provide Some Information
+      required:
+        - component_id
+        - owner
+      properties:
+        name:
+          title: Name
+          type: string
+          description: Unique name of the component
+          ui:field: EntityNamePicker
+        description:
+          title: Description
+          type: string
+          description: Help others understand what this component is for, what does it do?
+        owner:
+          title: Owner
+          type: string
+          description: Who owns this component?
+          ui:field: OwnerPicker
+          ui:options:
+            allowedKinds:
+              - Group
+    - title: Location of the Repository (URL)
+      required:
+        - repoUrl
+      properties:
+        repoUrl:
+          title: Repository Location
+          type: string
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - gitlab.com
+  steps:
+    - id: template
+      name: Fetch Skeleton + Template
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          component_id: ${{ parameters.component_id }}
+          description: ${{ parameters.description }}
+          destination: ${{ parameters.repoUrl | parseRepoUrl }}
+          owner: ${{ parameters.owner }}
+
+    - id: publish
+      name: Publish
+      action: publish:github
+      input:
+        allowedHosts: ["github.com"]
+        description: This is ${{ parameters.component_id }}
+        repoUrl: ${{ parameters.repoUrl }}
+
+    - id: register
+      name: Register
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps.publish.output.repoContentsUrl }}
+        catalogInfoPath: "/catalog-info.yaml"
+
+  output:
+    links:
+      - title: Repository
+        url: ${{ steps.publish.output.remoteUrl }}
+      - title: Open in catalog
+        icon: catalog
+        entityRef: ${{ steps.register.output.entityRef }}

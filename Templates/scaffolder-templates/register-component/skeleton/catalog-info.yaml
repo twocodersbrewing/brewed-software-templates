@@ -1,0 +1,14 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{ values.name | dump }}
+  description: ${{ values.description | dump }}
+  # Example for optional annotations
+  annotations:
+    gitlab.com/project-slug: ${{ values.owner "/" values.repoUrl | parseRepoUrl }}
+  #   github.com/project-slug: ${{}}
+  #   backstage.io/techdocs-ref: dir:.
+spec:
+  type: website
+  owner: example@example.nl
+  lifecycle: sandbox
