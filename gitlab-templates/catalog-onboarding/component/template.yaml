@@ -1,0 +1,113 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: component-onboarding-template
+  title: Onboard Component
+  description: Create a catalog-info.yaml file for Components and publish to GitLab as a Merge Request
+  tags:
+    - tags
+spec:
+  owner: example-owner
+  type: service
+
+  parameters:
+    - title: Provide basic information for Component
+      # required:
+      #   - componentName
+      #   - componentDescription
+      #   - componentType
+      #   - componentOwner
+      #   - componentSystem
+      #   - componentLifecycle
+      #   - componentRepoUrl
+      properties:
+        componentName:
+          title: Name
+          type: string
+          description: Unique name of the component
+        componentDescription:
+          title: Description
+          type: string
+          description: Help others understand what this component is for.
+        componentType:
+          title: Type
+          type: string
+          description: Type of the component (e.g., service, website, library)
+          ui:widget: select
+          enum:
+            - service
+            - website
+            - library
+        componentOwner:
+          title: Owner
+          type: string
+          description: Owner of the component
+          ui:field: OwnerPicker
+          ui:options:
+            allowedKinds:
+              - Group
+        componentSystem:
+          title: System
+          type: string
+          description: The system that the component belongs to
+        componentLifecycle:
+          title: Lifecycle
+          type: string
+          description: The lifecycle stage of the component (e.g., experimental, production)
+          ui:widget: select
+          enum:
+            - experimental
+            - development
+            - production
+        componentRepoUrl:
+          title: Repository Location
+          type: string
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - gitlab.com
+
+    - title: Provide Merge Request details
+      required:
+        - mrTitle
+        - mrDescription
+      properties:
+        mrTitle:
+          title: Merge Request Title
+          type: string
+          description: Title of the merge request
+        mrDescription:
+          title: Merge Request Description
+          type: string
+          description: Description of the merge request
+
+  steps:
+    - id: component_template
+      name: Generate catalog-info.yaml for Component
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          name: ${{ parameters.componentName }}
+          description: ${{ parameters.componentDescription }}
+          owner: ${{ parameters.componentOwner }}
+          lifecycle: ${{ parameters.componentLifecycle }}
+          type: ${{ parameters.componentType }}
+          system: $$ {{ parameters.componentSystem }}
+
+    - id: publish
+      name: Publish
+      action: publish:gitlab:merge-request
+      input:
+        repoUrl: ${{ parameters.componentRepoUrl }}
+        title: ${{ parameters.mrTitle }}
+        branchName: fancy-branch-name
+        description: ${{ parameters.mrDescription }}, this was created by Backstage by user ${{ user.entity.metadata.name }}
+        targetPath: '.'
+        commitAction: create
+        removeSourceBranch: true
+
+  output:
+    links:
+      - title: Merge Request
+        url: ${{ steps.publish.output.mergeRequestUrl }}

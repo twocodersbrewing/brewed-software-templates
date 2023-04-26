@@ -1,0 +1,21 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{ values.name }}
+  description: ${{ values.description }}
+  # annotations:
+    # gitlab-project: can be parameterized
+    # gitlab.com/project-slug: can also be parameterized
+  # tags:
+  #   - sometag, can be parameterized
+  # links:
+  #   - url: 
+  #     title: Gitlab Repository
+  #     icon: dashboard
+  #     type: component-repository
+  system: ${{ values.system }}
+spec:
+  type: ${{ values.type }}
+  owner: ${{ values.owner }}
+  lifecycle: ${{ values.lifecycle }}
+
